@@ -106,5 +106,5 @@ which is a lust of the mind, that by a perseverance of delight in the continued 
 generation of knowledge, exceeds the short vehemence of any carnal pleasure...">();
 
 	std::cout << test << '\n';
-	//std::cout << '\n' << base64::decode<test>() << '\n';
+	std::cout << '\n' << base64::decode<test>() << '\n';
 }
