@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 namespace base64
 {
 	template <std::size_t N>
@@ -50,8 +51,8 @@ namespace base64
 		{
 			char bytes[3] = {
 				(convert_char(string[i]) << 2) | (convert_char(string[i + 1]) >> 4),
-				(convert_char(string[i + 1]) << 4) | (convert_char(string[i + 2 >= string_size ? i+1 : i + 2]) >> 2),
-				(convert_char(string[i + 2 >= string_size ? i+1 : i+2]) << 6) | (convert_char(string[i + 3 >= string_size ? i+1 :i + 3])),
+				(convert_char(string[i + 1]) << 4) | (convert_char(string[i + 2]) >> 2),
+				(convert_char(string[i + 2]) << 6) | (convert_char(string[i + 3])),
 			};
 			result[j] = bytes[0];
 			result[j + 1] = bytes[1];
@@ -103,7 +104,7 @@ int main()
 
 	auto constexpr test = base64::encode<"Man is distinguished, not only by his reason, but by this singular passion from other animals, \
 which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable \
-generation of knowledge, exceeds the short vehemence of any carnal pleasure...">();
+generation of knowledge, exceeds the short vehemence of any carnal pleasure../..">();
 
 	std::cout << test << '\n';
 	std::cout << '\n' << base64::decode<test>() << '\n';
