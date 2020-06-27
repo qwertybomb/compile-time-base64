@@ -29,7 +29,13 @@ namespace base64
 	auto constexpr decode()
 	{
 		std::size_t constexpr string_size = string.size();
-		FixedString<(string_size * 3) / 4 - (string_size & 3)> result;
+		auto constexpr find_padding = [string_size](){ 
+			std::size_t i;
+			for(i=0; i < string_size; ++i)
+				if(string[i] == '=') break;
+			 return i;
+		};
+		FixedString<(string_size * 3) / 4> result;
 		auto constexpr convert_char = [](auto const &ch) {
 			if (ch >= 'A' && ch <= 'Z')
 				return ch - 65;
@@ -44,8 +50,8 @@ namespace base64
 		{
 			char bytes[3] = {
 				(convert_char(string[i]) << 2) | (convert_char(string[i + 1]) >> 4),
-				(convert_char(string[i + 1]) << 4) | (convert_char(string[i + 2]) >> 2),
-				(convert_char(string[i + 2]) << 6) | (convert_char(string[i + 3])),
+				(convert_char(string[i + 1]) << 4) | (convert_char(string[i + 2 >= string_size ? i+1 : i + 2]) >> 2),
+				(convert_char(string[i + 2 >= string_size ? i+1 : i+2]) << 6) | (convert_char(string[i + 3 >= string_size ? i+1 :i + 3])),
 			};
 			result[j] = bytes[0];
 			result[j + 1] = bytes[1];
@@ -60,9 +66,10 @@ namespace base64
 	{
 		std::size_t constexpr string_size = string.size();
 		std::size_t constexpr result_size_no_padding = (string_size * 4 + 2) / 3;
-		std::size_t constexpr result_size = (result_size_no_padding + 3) & (-4);
+		std::size_t constexpr result_size = (result_size_no_padding+3)&(-4);
 		std::size_t constexpr padding_size = result_size - result_size_no_padding;
-		FixedString<result_size> result = string;
+		FixedString<(string_size+3)&(-4)> string_with_padding = string;
+		FixedString<result_size> result;
 		auto constexpr convert_num = [](auto const &num) {
 			if (num < 26)
 				return static_cast<char>(num + 65);
@@ -76,20 +83,17 @@ namespace base64
 		for (std::size_t i = 0, j = 0; i < string_size; i += 3, j += 4)
 		{
 			char bytes[4] = {
-				string[i] >> 2,
-				((string[i] & (3)) << 4) | (string[i + 1] >> 4),
-				((string[i + 1] & (15)) << 2) | (string[i + 2] >> 6),
-				string[i + 2] & 63};
+				string_with_padding[i] >> 2,
+				((string_with_padding[i] & (3)) << 4) | (string_with_padding[i + 1] >> 4),
+				((string_with_padding[i + 1] & (15)) << 2) | (string_with_padding[i + 2] >> 6),
+				string_with_padding[i + 2] & 63};
 			result[j] = convert_num(bytes[0]);
 			result[j + 1] = convert_num(bytes[1]);
 			result[j + 2] = convert_num(bytes[2]);
 			result[j + 3] = convert_num(bytes[3]);
 		}
-		if (padding_size != 0)
-		{
 			for (std::size_t i = 0; i < padding_size; ++i)
 				result[result_size_no_padding + i] = '=';
-		}
 		return result;
 	}
 } // namespace base64
@@ -99,8 +103,8 @@ int main()
 
 	auto constexpr test = base64::encode<"Man is distinguished, not only by his reason, but by this singular passion from other animals, \
 which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable \
-generation of knowledge, exceeds the short vehemence of any carnal pleasure.">();
+generation of knowledge, exceeds the short vehemence of any carnal pleasure...">();
 
 	std::cout << test << '\n';
-	std::cout << '\n' << base64::decode<test>() << '\n';
+	//std::cout << '\n' << base64::decode<test>() << '\n';
 }
