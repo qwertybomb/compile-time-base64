@@ -1,11 +1,13 @@
 #include <iostream>
+#include <algorithm>
 #include <cstring>
+
 namespace base64
 {
     template <std::size_t N>
     struct FixedString
     {
-        char buf[N + 1] {};
+        char buf[N + 1]{};
         constexpr FixedString() = default;
         constexpr FixedString(char const *s)
         {
@@ -27,7 +29,7 @@ namespace base64
         auto constexpr &operator[](std::size_t index) { return buf[index]; }
         std::size_t constexpr size() const { return N; }
 
-        friend auto &operator<<(std::ostream& stream, const FixedString& string)
+        friend auto &operator<<(std::ostream &stream, const FixedString &string)
         {
             stream << string.buf;
             return stream;
@@ -35,11 +37,11 @@ namespace base64
     };
 
     template <std::size_t N>
-    FixedString(char const (&)[N]) -> FixedString < N - 1 >;
+    FixedString(char const (&)[N])->FixedString < N - 1 >;
 
     namespace detail
     {
-        auto constexpr convert_char (char const ch)
+        auto constexpr convert_char(char const ch)
         {
             if (ch >= 'A' && ch <= 'Z')
                 return ch - 65;
@@ -51,7 +53,7 @@ namespace base64
                 return ch == '+' ? 62 : 63;
         }
 
-        auto constexpr convert_number (char const num)
+        auto constexpr convert_number(char const num)
         {
             if (num < 26)
                 return static_cast<char>(num + 65);
@@ -70,7 +72,7 @@ namespace base64
         std::size_t constexpr string_size = string.size();
         auto constexpr find_padding = [string_size]() {
             return std::distance(string.buf,
-                                 std::find(string.buf, string.buf + string_size, '='));
+                std::find(string.buf, string.buf + string_size, '='));
         };
         FixedString <find_padding() * 3 / 4 > result;
         for (std::size_t i = 0, j = 0; i < string_size; i += 4, j += 3)
@@ -127,7 +129,7 @@ namespace base64
 int main()
 {
 
-    auto constexpr input_text = base64::FixedString { "Man is distinguished, not only by his reason, but by this singular passion from other animals, \
+    auto constexpr input_text = base64::FixedString{ "Man is distinguished, not only by his reason, but by this singular passion from other animals, \
 which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable \
 generation of knowledge, exceeds the short vehemence of any carnal pleasure." };
     auto constexpr encoded = base64::encode<input_text>();
